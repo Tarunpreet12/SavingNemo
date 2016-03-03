@@ -156,6 +156,44 @@ class DbConnect(object):
         final_result = result
         cursor.close()
         return final_result
+    
+    def getQueryRawResults(self, queryDict):
+        """Fetches records form tables based on user query"""
+        cursor = self.connection.cursor()
+        where_condition = " where lt.type=\'"+queryDict.get('logger_type')[0]+\
+            "\' and lg.country=\'"+queryDict.get('country_name')[0]+"\'"# and t.date_time BETWEEN \'"+queryDict.get('start_date')[0]+"\' AND \'"+queryDict.get('end_date')+"\'"
+        if queryDict.get('state_name')[0] != 'None':
+            where_condition += " and lg.state=\'"+queryDict.get('state_name')[0]+"\'"
+        if queryDict.get('location_name')[0] != 'None':
+            where_condition += " and lg.location=\'"+queryDict.get('location_name')[0]+"\'"
+        if queryDict.get('zone_name')[0] != 'None':
+            where_condition += " and p.zone=\'"+queryDict.get('zone_name')[0]+"\'"
+        if queryDict.get('sub_zone_name')[0] != 'None':
+            where_condition += " and p.subzone=\'"+queryDict.get('sub_zone_name')[0]+"\'"
+        if (queryDict.get('wave_exp')[0] is not None):
+            if (queryDict.get('wave_exp')[0] == 'None'):
+                where_condition += " and p.wave_exp is Null"
+            else:
+                where_condition += " and p.wave_exp=\'"+queryDict.get('wave_exp')[0]+"\'"
+        query = '''select t.date_time,t.temperature
+            from cnx_logger_type lt
+            inner join cnx_logger l
+            on l.biomimic_id=lt.bioid
+            inner join cnx_logger_geographics lg
+            on l.geo_id=lg.gid
+            inner join cnx_logger_properties p
+            on p.lpropId = l.prop_id
+            inner join cnx_logger_temp t on t.logger_id = l.lid''' + where_condition
+        #print("query: ", query)
+        cursor.execute(query)
+        result = cursor.fetchall()
+        result = list(result)
+
+        header = [("logger_type:"+queryDict.get('logger_type')[0],"country_name:"+queryDict.get('country_name')[0],"state_name:"+queryDict.get('state_name')[0],"location_name:"+queryDict.get('location_name')[0],"zone_name:"+queryDict.get('zone_name')[0],"sub_zone_name:"+queryDict.get('sub_zone_name')[0],"wave_exp:"+queryDict.get('wave_exp')[0]),("date_time","temperature")]
+        final_result = header + result
+        cursor.close()
+        return final_result
+
 
     def close(self):
         self.connection.close()

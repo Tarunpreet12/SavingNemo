@@ -4,6 +4,9 @@ from flask import Flask, request, session, g, redirect, url_for, \
 from .forms import QueryForm
 from app import app
 from app.dbconnect import DbConnect
+from flask.ext import excel
+
+
 
 @app.route('/')
 @app.route('/home')
@@ -66,7 +69,9 @@ def query():
 
         db = DbConnect(app.config)
         query_results = db.getQueryResults(query) 
+        session['query_raw_results'] = db.getQueryRawResults(query)
         db.close()
+        session['query_info'] = query;
         # print("results: ", query_results)
         flash(query_results)
         # if form.validate_on_submit():
@@ -78,6 +83,12 @@ def query():
         # else:
         #     error = 'Invalid Submission. All fields marked with * are compulsory'
     return render_template('query.html', title='Query', form=form, error=error)
+
+@app.route("/download",methods=['GET'])
+def download():
+
+    return excel.make_response_from_array(session['query_raw_results'], "csv", file_name="export_data")
+ 
 
 @app.route('/_parse_data', methods=['GET'])
 def parse_data():
@@ -102,6 +113,9 @@ def queryDb(query_type, query_value):
     elif query_type == "lt_for_wave_exp":
         result = db.getWaveExp(query_value)
     return result       
+
+
+
 
 @app.errorhandler(404)
 def not_found_error(error):
