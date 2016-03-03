@@ -83,8 +83,11 @@ class QueryFormTestCase(unittest.TestCase):
                     date_pick_to=datetime.date(2016, 4, 30).strftime('%m/%d/%Y')),
                     follow_redirects=True)
             self.assertIn(b"[(&#39;robomussel&#39;, 13.98), (&#39;robomussel&#39;, 12.87)]", response.data)
-
-            # self.assertIn((robomussel, 13.98), (&#39;robomussel&#39;, 12.87)
+            
+            #   test for download function
+            response_download = client.get('/download')
+            assert '13.98' in response_download.data
+            
 
     # def test_query_submit_missing_compulsory_values(self):
     #     """Test the QueryForm with compulsory fields missing"""
